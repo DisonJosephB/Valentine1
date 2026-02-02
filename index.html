@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will you be my Valentine?</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #fce4ec; /* Cute pink background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevents scrollbars when button moves */
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 90%;
+            width: 400px;
+        }
+
+        h1 {
+            color: #d81b60;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        img {
+            width: 200px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        /* Space for buttons moving */
+        .buttons {
+            position: relative;
+            height: 60px; 
+            /* display: flex; */
+            justify-content: space-between;
+            gap: 20px;
+        }
+        /* .buttons{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+        } */
+
+        button {
+            padding: 10px 30px;
+            font-size: 18px;
+            /* justify-content: space-evenly; */
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #yesBtn {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        #yesBtn:hover {
+            transform: scale(1.1);
+        }
+
+        #noBtn {
+            background-color: #f44336; /* Red */
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: absolute; /* Allows free movement */
+        }
+
+        /* Hidden class for switching screens */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="questionScreen">
+        <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGIwZHIxNHR2Znd2ZHR1M3R2Znd2ZHR1M3R2Znd2ZHR1M3R2Znd2ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/MDJ9IbxxvDUQM/giphy.gif" alt="Cute Cat">
+        <h1>Hey Evanjalin Kiruba, will you be my Valentine?</h1>
+        <div class="buttons">
+            <button id="yesBtn" onclick="handleYes()">Yes</button>
+            <button id="noBtn" onmouseover="moveButton()">No</button>
+        </div>
+    </div>
+
+    <div class="container hidden" id="successScreen">
+        <img src="https://media.giphy.com/media/T86i6yDyOYz7J6vap8/giphy.gif" alt="Yay">
+        <h1 id="yayText">YAY! 💖</h1>
+        <p>See you on the 14th! 🥰</p>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // You need to create a free account at emailjs.com to get these keys.
+        // It takes 5 minutes. If you don't do this, the email won't send, 
+        // but the rest of the page will still work.
+        const PUBLIC_KEY = "YOUR_PUBLIC_KEY"; 
+        const SERVICE_ID = "YOUR_SERVICE_ID";
+        const TEMPLATE_ID = template_prefofr;
+
+        (function(){
+            emailjs.init(PUBLIC_KEY);
+        })();
+
+        // --- STATE VARIABLES ---
+        let noCount = 0;
+        const noBtn = document.getElementById('noBtn');
+        const questionScreen = document.getElementById('questionScreen');
+        const successScreen = document.getElementById('successScreen');
+        const yayText = document.getElementById('yayText');
+
+        // --- CHECK IF ALREADY ANSWERED (Session Storage) ---
+        // This ensures if she reloads, she stays on the 'Yay' screen.
+        // She must close the tab and click the link again to reset.
+        if (sessionStorage.getItem('answered') === 'true') {
+            showSuccessScreen(false); // false means don't trigger confetti again on reload
+        }
+
+        // --- MOVE BUTTON LOGIC ---
+        function moveButton() {
+            noCount++; // Increase the "chase" count
+            
+            // Cool Feature: Change text based on persistence
+            const phrases = ["No", "Are you sure?", "Really?", "Think again!", "Last chance!", "Don't do this!", "Please?", "💔"];
+            noBtn.innerText = phrases[Math.min(noCount, phrases.length - 1)];
+
+            // Calculate random position within the viewport
+            const x = Math.random() * (window.innerWidth - noBtn.offsetWidth - 40);
+            const y = Math.random() * (window.innerHeight - noBtn.offsetHeight - 40);
+            
+            noBtn.style.left = `${x}px`;
+            noBtn.style.top = `${y}px`;
+            
+            // Fix position to fixed so it can fly anywhere on screen
+            noBtn.style.position = 'fixed';
+        }
+
+        // --- HANDLE YES CLICK ---
+        function handleYes() {
+            // 1. Lock the session so reload doesn't restart it
+            sessionStorage.setItem('answered', 'true');
+
+            // 2. Send the count to you via Email
+            // We use the count as a parameter to send
+            const templateParams = {
+                to_name: "Devanshu", // Your name
+                message: `She said YES! She chased the 'No' button ${noCount} times.`,
+                count: noCount
+            };
+
+            emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                }, function(error) {
+                    console.log('FAILED...', error);
+                });
+
+            // 3. Show the celebration
+            showSuccessScreen(true);
+        }
+
+        function showSuccessScreen(triggerConfetti) {
+            questionScreen.classList.add('hidden');
+            successScreen.classList.remove('hidden');
+
+            if (triggerConfetti) {
+                // Launch Confetti
+                var duration = 3 * 1000;
+                var animationEnd = Date.now() + duration;
+                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+                var interval = setInterval(function() {
+                    var timeLeft = animationEnd - Date.now();
+
+                    if (timeLeft <= 0) {
+                        return clearInterval(interval);
+                    }
+
+                    var particleCount = 50 * (timeLeft / duration);
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                }, 250);
+            }
+        }
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+    </script>
+</body>
+</html>
